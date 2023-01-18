@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+pull_request_id="${BUILDKITE_PULL_REQUEST:-false}"
+if [[ "$pull_request_id" != "false" ]]; then
+    git clean -fxdq
+    git fetch -v --prune origin refs/pull/"$pull_request_id"/merge
+    fetch_head="$(git rev-parse FETCH_HEAD)"
+    git checkout -f "$fetch_head"
+    # Cleaning again to catch any post-checkout changes
+    git clean -fxdq
+fi
