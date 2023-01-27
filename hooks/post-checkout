@@ -1,11 +1,16 @@
 #!/usr/bin/env bash
 
-set -euo pipefail
+set -exu -o pipefail
 
 pull_request_id="${BUILDKITE_PULL_REQUEST:-false}"
 if [[ "$pull_request_id" != "false" ]]; then
     git clean -fxdq
-    git fetch -v --prune origin refs/pull/"$pull_request_id"/merge
+    fetch_remote_status=0
+    git fetch -v --prune origin refs/pull/"$pull_request_id"/merge || fetch_remote_status=$?
+    if [ "$fetch_remote_status" != 0 ]; then
+        echo "Pull request $pull_request_id appears to have been deleted."
+        exit 0
+    fi
     fetch_head="$(git rev-parse FETCH_HEAD)"
     git checkout -f "$fetch_head"
     # Cleaning again to catch any post-checkout changes
