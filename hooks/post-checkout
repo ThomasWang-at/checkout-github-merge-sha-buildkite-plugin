@@ -2,10 +2,10 @@
 
 set -euo pipefail
 
-pull_request_id="${BUILDKITE_PULL_REQUEST:-false}"
+pull_request_commit="${BUILDKITE_COMMIT:-false}"
 if [[ "$pull_request_id" != "false" ]]; then
     git clean -fxdq
-    git fetch -v --prune origin refs/pull/"$pull_request_id"/merge
+    git fetch -v --prune origin "$pull_request_commit"
     fetch_head="$(git rev-parse FETCH_HEAD)"
     git checkout -f "$fetch_head"
     # Cleaning again to catch any post-checkout changes
