@@ -1,3 +1,10 @@
 name: Checkout GitHub merge sha
 description: Checkout GitHub merge sha before running command, only active in GitHub Pull Request builds.
 author: https://github.com/ThomasWang-at
+requirements:
+  - git
+configuration:
+  properties:
+    git_merge_sha:
+      type: string
+  additionalProperties: false

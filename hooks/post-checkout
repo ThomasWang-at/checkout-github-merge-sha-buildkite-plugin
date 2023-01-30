@@ -2,17 +2,32 @@
 
 set -eu -o pipefail
 
+git_merge_sha="${BUILDKITE_PLUGIN_CHECKOUT_GITHUB_MERGE_SHA_GIT_MERGE_SHA:-false}"
 pull_request_id="${BUILDKITE_PULL_REQUEST:-false}"
-if [[ "$pull_request_id" != "false" ]]; then
+
+if [[ "$git_merge_sha" != "false" ]]; then
+    git clean -fxdq
+    echo "Checking out specified sha: $git_merge_sha"
+    fetch_remote_merge_sha_status=0
+    git fetch -v --prune origin "$git_merge_sha" || fetch_remote_merge_sha_status=$?
+    if [ "$fetch_remote_merge_sha_status" != 0 ]; then
+        echo "Specified remote sha $git_merge_sha appears to have been deleted."
+    else
+        git checkout -f "$git_merge_sha"
+        # Cleaning again to catch any post-checkout changes
+        git clean -fxdq
+    fi
+elif [[ "$pull_request_id" != "false" ]]; then
     git clean -fxdq
     fetch_remote_status=0
     git fetch -v --prune origin refs/pull/"$pull_request_id"/merge || fetch_remote_status=$?
     if [ "$fetch_remote_status" != 0 ]; then
         echo "Pull request $pull_request_id appears to have been deleted."
-        exit 0
+    else
+        fetch_head="$(git rev-parse FETCH_HEAD)"
+        git checkout -f "$fetch_head"
+        # Cleaning again to catch any post-checkout changes
+        git clean -fxdq
     fi
-    fetch_head="$(git rev-parse FETCH_HEAD)"
-    git checkout -f "$fetch_head"
-    # Cleaning again to catch any post-checkout changes
-    git clean -fxdq
 fi
+
